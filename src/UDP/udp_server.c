@@ -11,7 +11,6 @@
 int main() {
     int sockfd;
     char buffer[BUFFER_SIZE];
-    char *message = "Hello from server";
     struct sockaddr_in servaddr, cliaddr;
 
     // Creating socket file descriptor
@@ -38,14 +37,23 @@ int main() {
     socklen_t len = sizeof(cliaddr);  // Length of the client address
     int n;
 
-    // Receive message from client
-    n = recvfrom(sockfd, (char *)buffer, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *)&cliaddr, &len);
-    buffer[n] = '\0';
-    printf("Client: %s\n", buffer);
+    while (1) {
+        // Receive message from client
+        n = recvfrom(sockfd, (char *)buffer, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *)&cliaddr, &len);
+        buffer[n] = '\0';
+        printf("Client: %s\n", buffer);
 
-    // Send response to client (without MSG_CONFIRM flag)
-    sendto(sockfd, (const char *)message, strlen(message), 0, (const struct sockaddr *)&cliaddr, len);
-    printf("Message sent to client.\n");
+        // Check for exit condition
+        if (strcmp(buffer, "exit") == 0) {
+            printf("Client has exited. Stopping server.\n");
+            break;
+        }
+
+        // Send response to client
+        char *response = "Hello from server";  // Customize the response message as needed
+        sendto(sockfd, (const char *)response, strlen(response), 0, (const struct sockaddr *)&cliaddr, len);
+        printf("Message sent to client: %s\n", response);
+    }
 
     close(sockfd);
     return 0;
