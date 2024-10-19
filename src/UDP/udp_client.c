@@ -11,7 +11,6 @@
 int main() {
     int sockfd;
     char buffer[BUFFER_SIZE];
-    char *message = "Hello from client";
     struct sockaddr_in servaddr;
 
     // Creating socket file descriptor
@@ -28,15 +27,31 @@ int main() {
     servaddr.sin_addr.s_addr = INADDR_ANY;
 
     socklen_t len = sizeof(servaddr);
+    
+    while (1) {
+        char message[BUFFER_SIZE];
 
-    // Send message to server (without MSG_CONFIRM flag)
-    sendto(sockfd, (const char *)message, strlen(message), 0, (const struct sockaddr *)&servaddr, len);
-    printf("Message sent to server.\n");
+        // Prompt the user for input
+        printf("Enter message to send (or 'exit' to quit): ");
+        fgets(message, BUFFER_SIZE, stdin);
 
-    // Receive response from server
-    int n = recvfrom(sockfd, (char *)buffer, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *)&servaddr, &len);
-    buffer[n] = '\0';
-    printf("Server: %s\n", buffer);
+        // Remove newline character from message
+        message[strcspn(message, "\n")] = 0;
+
+        // Check for exit condition
+        if (strcmp(message, "exit") == 0) {
+            break;
+        }
+
+        // Send message to server (without MSG_CONFIRM flag)
+        sendto(sockfd, (const char *)message, strlen(message), 0, (const struct sockaddr *)&servaddr, len);
+        printf("Message sent to server: %s\n", message);
+
+        // Receive response from server
+        int n = recvfrom(sockfd, (char *)buffer, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *)&servaddr, &len);
+        buffer[n] = '\0';
+        printf("Server: %s\n", buffer);
+    }
 
     close(sockfd);
     return 0;
